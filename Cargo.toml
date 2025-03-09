@@ -1,0 +1,14 @@
+[package]
+name = "common_utils"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "^1.0"
+directories = "^6.0"
+self_update = { version = "^0.42" }
+tempfile = "^3.8"
+reqwest = "^0.12"
+zip-extract = "^0.2"
+itertools = "^0.14"
+open = "^5"
