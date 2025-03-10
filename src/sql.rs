@@ -1,28 +1,33 @@
 
-use getset::{Getters, Setters};
 use anyhow::Result;
+use getset::{Getters, Setters};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufReader, Read};
+use std::path::Path;
 
 //-------------------------------------------------------------------------------//
 //                              Enums & Structs
 //-------------------------------------------------------------------------------//
 
-#[derive(Getters, Setters, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub")]
 pub struct Preset {
     script: String,
     params: HashMap<String, String>,
 }
 
-#[derive(Getters, Setters, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub")]
 pub struct SQLScript {
     metadata: Metadata,
+
+    #[serde(skip)]
     queries: String,
 }
 
-#[derive(Getters, Setters, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub")]
 pub struct Metadata {
     key: String,
@@ -33,7 +38,7 @@ pub struct Metadata {
     replacements: HashMap<String, String>
 }
 
-#[derive(Getters, Setters, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub")]
 pub struct Param {
     key: String,
@@ -42,8 +47,9 @@ pub struct Param {
     default_value: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum ParamType {
+    #[default]
     Bool,
     Integer,
     Float,
@@ -60,12 +66,30 @@ impl Preset {
 }
 
 impl SQLScript {
+
+    pub fn from_path(path: &Path) -> Result<Self> {
+        let mut file = BufReader::new(File::open(path)?);
+        let mut data = vec![];
+        file.read_to_end(&mut data)?;
+
+        let mut script = Self::read(&data)?;
+
+        let mut sql_file = path.to_path_buf();
+        sql_file.set_file_name(script.metadata().key());
+        sql_file.set_extension("sql");
+
+        let mut file = BufReader::new(File::open(sql_file)?);
+        file.read_to_string(&mut script.queries)?;
+
+        Ok(script)
+    }
+
     pub fn read(data: &[u8]) -> Result<Self> {
         Ok(serde_yml::from_slice(data)?)
     }
 
     pub fn prepare(&self, param_values: HashMap<String, String>) -> String {
-        let mut script = self.queries.to_owned();
+        let mut script = self.queries.replace("\r\n", "\n");
 
         // First apply the string replacements. To support nested replacements... we do some magic.
         let mut replacements = self.metadata.replacements.clone();
