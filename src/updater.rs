@@ -17,10 +17,10 @@ const UPDATE_EXTENSION: &str = "zip";
 
 const UPDATE_FOLDER_PREFIX: &str = "updates";
 
-const CHANGELOG_FILE: &str = "CHANGELOG.txt";
+pub const CHANGELOG_FILE: &str = "CHANGELOG.txt";
 
-const STABLE: &str = "Stable";
-const BETA: &str = "Beta";
+pub const STABLE: &str = "Stable";
+pub const BETA: &str = "Beta";
 
 //-------------------------------------------------------------------------------//
 //                              Enums & Structs
