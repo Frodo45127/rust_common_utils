@@ -4,7 +4,7 @@
 
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
-use self_update::{backends::github::ReleaseList, cargo_crate_version, Download, get_target, Move, update::Release};
+use self_update::{backends::github::ReleaseList, Download, get_target, Move, update::Release};
 use tempfile::Builder;
 
 use std::env::current_exe;
@@ -141,10 +141,10 @@ impl Updater {
     }
 
     /// This function takes care of checking for new TWPatcher updates.
-    pub fn check(&self) -> Result<APIResponse> {
+    pub fn check(&self, current_version: &str) -> Result<APIResponse> {
         let last_release = self.last_release()?;
 
-        let current_version = cargo_crate_version!().split('.').map(|x| x.parse::<i32>().unwrap_or(0)).collect::<Vec<i32>>();
+        let current_version = current_version.split('.').map(|x| x.parse::<i32>().unwrap_or(0)).collect::<Vec<i32>>();
         let last_version = &last_release.version.split('.').map(|x| x.parse::<i32>().unwrap_or(0)).collect::<Vec<i32>>();
 
         // Before doing anything else, check if we are going back to stable after a beta, and we are currently in a beta version.
