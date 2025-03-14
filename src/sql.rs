@@ -14,7 +14,9 @@ use std::path::Path;
 #[derive(Default, Debug, Clone, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub")]
 pub struct Preset {
-    script: String,
+    key: String,
+    name: String,
+    script_key: String,
     params: HashMap<String, String>,
 }
 
@@ -60,32 +62,46 @@ pub enum ParamType {
 //---------------------------------------------------------------------------//
 
 impl Preset {
-    pub fn read(data: &[u8]) -> Result<Self> {
-        Ok(serde_yml::from_slice(data)?)
+    pub fn read(path: &Path) -> Result<Self> {
+        let mut file = BufReader::new(File::open(path)?);
+        let mut data = vec![];
+        file.read_to_end(&mut data)?;
+
+        Ok(serde_yml::from_slice(&data)?)
     }
 }
 
 impl SQLScript {
 
     pub fn from_path(path: &Path) -> Result<Self> {
-        let mut file = BufReader::new(File::open(path)?);
-        let mut data = vec![];
-        file.read_to_end(&mut data)?;
+        let mut script = Self::default();
 
-        let mut script = Self::read(&data)?;
-
-        let mut sql_file = path.to_path_buf();
-        sql_file.set_file_name(script.metadata().key());
-        sql_file.set_extension("sql");
-
-        let mut file = BufReader::new(File::open(sql_file)?);
-        file.read_to_string(&mut script.queries)?;
+        script.read_metadata(&path)?;
+        script.read_queries(&path)?;
 
         Ok(script)
     }
 
-    pub fn read(data: &[u8]) -> Result<Self> {
-        Ok(serde_yml::from_slice(data)?)
+    pub fn read_metadata(&mut self, path: &Path) -> Result<()> {
+        let mut file = BufReader::new(File::open(path)?);
+        let mut data = vec![];
+        file.read_to_end(&mut data)?;
+
+        dbg!(String::from_utf8(data.clone()));
+        self.metadata = serde_yml::from_slice(&data)?;
+
+        Ok(())
+    }
+
+    pub fn read_queries(&mut self, path: &Path) -> Result<()> {
+        let mut sql_file = path.to_path_buf();
+        sql_file.set_file_name(self.metadata().key());
+        sql_file.set_extension("sql");
+
+        let mut file = BufReader::new(File::open(sql_file)?);
+        file.read_to_string(&mut self.queries)?;
+
+        Ok(())
     }
 
     pub fn prepare(&self, param_values: HashMap<String, String>) -> String {
