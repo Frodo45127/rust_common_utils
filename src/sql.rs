@@ -87,7 +87,6 @@ impl SQLScript {
         let mut data = vec![];
         file.read_to_end(&mut data)?;
 
-        dbg!(String::from_utf8(data.clone()));
         self.metadata = serde_yml::from_slice(&data)?;
 
         Ok(())
