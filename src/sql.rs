@@ -37,6 +37,7 @@ pub struct Metadata {
     description: String,
     parameters: Vec<Param>,
     tables_affected: Vec<String>,
+    tables_created: HashMap<String, String>,
     replacements: HashMap<String, String>
 }
 
@@ -103,7 +104,7 @@ impl SQLScript {
         Ok(())
     }
 
-    pub fn prepare(&self, param_values: HashMap<String, String>) -> String {
+    pub fn prepare(&self, param_values: HashMap<String, String>, pack_name: &str) -> String {
         let mut script = self.queries.replace("\r\n", "\n");
 
         // First apply the string replacements. To support nested replacements... we do some magic.
@@ -133,11 +134,11 @@ impl SQLScript {
             script = script.replace(key, value);
         }
 
-        // Then, apply the params.
         for (key, value) in &param_values {
             script = script.replace(key, value);
         }
 
+        script = script.replace("PACK_FILE_NAME", pack_name);
         script
     }
 }
