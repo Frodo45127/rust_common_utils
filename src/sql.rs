@@ -35,6 +35,7 @@ pub struct Metadata {
     key: String,
     name: String,
     description: String,
+    automatic: bool,
     parameters: Vec<Param>,
     tables_affected: Vec<String>,
     tables_created: HashMap<String, String>,
